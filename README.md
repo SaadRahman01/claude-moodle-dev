@@ -9,7 +9,7 @@ Helps Claude scaffold, modify, upgrade, and review Moodle plugins (local, mod, b
 ### From this marketplace (GitHub)
 
 ```
-/plugin marketplace add <github-user>/claude-moodle-dev
+/plugin marketplace add SaadR-SG/claude-moodle-dev
 /plugin install moodle-dev@moodle-dev
 ```
 
