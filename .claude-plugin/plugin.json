@@ -1,0 +1,20 @@
+{
+  "name": "moodle-dev",
+  "version": "0.1.0",
+  "description": "Skills and conventions for Moodle plugin development (local, mod, block, format, theme, auth, enrol, qtype, filter, repository).",
+  "author": {
+    "name": "Saad Rahman",
+    "email": "saad.rahman@arbisoft.com"
+  },
+  "homepage": "https://moodledev.io",
+  "license": "MIT",
+  "keywords": [
+    "moodle",
+    "php",
+    "lms",
+    "plugin",
+    "edtech",
+    "xmldb",
+    "moodle-plugin"
+  ]
+}

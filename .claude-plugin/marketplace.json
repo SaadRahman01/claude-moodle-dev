@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "moodle-dev",
+  "description": "Moodle plugin development skills for Claude Code: scaffolding, XMLDB, capabilities, web services, privacy, and review.",
+  "owner": {
+    "name": "Saad Rahman",
+    "email": "saad.rahman@arbisoft.com"
+  },
+  "plugins": [
+    {
+      "name": "moodle-dev",
+      "description": "Skills for building, upgrading, and reviewing Moodle plugins (local, mod, block, format, theme, auth, enrol, qtype).",
+      "source": "./",
+      "version": "0.1.0",
+      "category": "development",
+      "tags": ["moodle", "php", "lms", "edtech", "plugin-development"]
+    }
+  ]
+}
