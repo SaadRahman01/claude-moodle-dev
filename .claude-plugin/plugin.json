@@ -1,20 +1,31 @@
 {
   "name": "moodle-dev",
-  "version": "0.1.0",
-  "description": "Skills and conventions for Moodle plugin development (local, mod, block, format, theme, auth, enrol, qtype, filter, repository).",
+  "version": "0.2.0",
+  "description": "The most complete Moodle development toolkit for Claude Code: 12 skills, 6 slash commands, 2 subagents covering scaffolding, XMLDB, capabilities, web services, AMD JS, PHPUnit, Behat, security, privacy/GDPR, performance, accessibility, themes, mobile, and cross-version upgrades.",
   "author": {
     "name": "Saad Rahman",
-    "email": "saad.rahman@arbisoft.com"
+    "email": "saad.rahman010@gmail.com"
   },
-  "homepage": "https://moodledev.io",
+  "homepage": "https://github.com/SaadRahman01/claude-moodle-dev",
+  "repository": "https://github.com/SaadRahman01/claude-moodle-dev",
   "license": "MIT",
   "keywords": [
     "moodle",
+    "moodle-plugin",
+    "moodle-dev",
     "php",
     "lms",
-    "plugin",
     "edtech",
     "xmldb",
-    "moodle-plugin"
+    "phpunit",
+    "behat",
+    "amd",
+    "gdpr",
+    "privacy",
+    "accessibility",
+    "wcag",
+    "security",
+    "claude-code",
+    "claude-plugin"
   ]
 }

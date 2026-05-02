@@ -1,19 +1,33 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "moodle-dev",
-  "description": "Moodle plugin development skills for Claude Code: scaffolding, XMLDB, capabilities, web services, privacy, and review.",
+  "description": "The most complete Moodle development toolkit for Claude Code: skills, slash commands, and subagents covering the entire Moodle plugin lifecycle.",
   "owner": {
     "name": "Saad Rahman",
-    "email": "saad.rahman@arbisoft.com"
+    "email": "saad.rahman010@gmail.com"
   },
   "plugins": [
     {
       "name": "moodle-dev",
-      "description": "Skills for building, upgrading, and reviewing Moodle plugins (local, mod, block, format, theme, auth, enrol, qtype).",
+      "description": "12 skills + 6 commands + 2 agents for Moodle plugin scaffolding, XMLDB, web services, AMD/JS, PHPUnit, Behat, security, privacy, performance, accessibility, themes, mobile app, and cross-version upgrades.",
       "source": "./",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
-      "tags": ["moodle", "php", "lms", "edtech", "plugin-development"]
+      "tags": [
+        "moodle",
+        "php",
+        "lms",
+        "edtech",
+        "plugin-development",
+        "phpunit",
+        "behat",
+        "amd",
+        "gdpr",
+        "accessibility",
+        "security",
+        "themes",
+        "mobile-app"
+      ]
     }
   ]
 }
