@@ -1,0 +1,58 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON manifests
+        run: |
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json; do
+            echo "Validating $f"
+            python3 -c "import json,sys; json.load(open('$f'))"
+          done
+
+      - name: Check skill frontmatter
+        run: |
+          fail=0
+          for f in skills/*/SKILL.md; do
+            head -5 "$f" | grep -q "^name:" || { echo "::error file=$f::missing name"; fail=1; }
+            head -5 "$f" | grep -q "^description:" || { echo "::error file=$f::missing description"; fail=1; }
+          done
+          exit $fail
+
+      - name: Check command frontmatter
+        run: |
+          fail=0
+          for f in commands/*.md; do
+            [ -f "$f" ] || continue
+            head -5 "$f" | grep -q "^name:" || { echo "::error file=$f::missing name"; fail=1; }
+            head -5 "$f" | grep -q "^description:" || { echo "::error file=$f::missing description"; fail=1; }
+          done
+          exit $fail
+
+      - name: Check agent frontmatter
+        run: |
+          fail=0
+          for f in agents/*.md; do
+            [ -f "$f" ] || continue
+            head -5 "$f" | grep -q "^name:" || { echo "::error file=$f::missing name"; fail=1; }
+            head -5 "$f" | grep -q "^description:" || { echo "::error file=$f::missing description"; fail=1; }
+          done
+          exit $fail
+
+      - name: Verify version sync
+        run: |
+          plugin_v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          mp_v=$(python3 -c "import json; print(json.load(open('.claude-plugin/marketplace.json'))['plugins'][0]['version'])")
+          if [ "$plugin_v" != "$mp_v" ]; then
+            echo "::error::version mismatch: plugin.json=$plugin_v marketplace.json=$mp_v"
+            exit 1
+          fi
+          echo "Version $plugin_v in sync"

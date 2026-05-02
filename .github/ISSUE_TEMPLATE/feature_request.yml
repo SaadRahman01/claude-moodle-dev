@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a new skill, command, or agent
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New skill
+        - New slash command
+        - New subagent
+        - Improve existing skill
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use case
+      description: What Moodle task should Claude do better?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example prompt
+      placeholder: "Scaffold an LTI 1.3 tool plugin with ..."
+  - type: textarea
+    id: refs
+    attributes:
+      label: Reference docs
+      placeholder: "https://moodledev.io/docs/..."

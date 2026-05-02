@@ -1,0 +1,39 @@
+name: Bug report
+description: A skill, command, or agent misbehaves
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Prompt you gave Claude
+      placeholder: "Build a local plugin that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior (paste Claude's output)
+    validations:
+      required: true
+  - type: input
+    id: skill
+    attributes:
+      label: Which skill / command / agent fired?
+      placeholder: "moodle-plugin-development"
+  - type: input
+    id: moodle
+    attributes:
+      label: Target Moodle version
+      placeholder: "4.5"
+  - type: input
+    id: plugin-version
+    attributes:
+      label: moodle-dev plugin version
+      placeholder: "0.2.0"

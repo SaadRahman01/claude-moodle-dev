@@ -1,0 +1,242 @@
+---
+name: moodle-behat-testing
+description: Use when writing or running Behat acceptance tests for Moodle plugins. Covers feature files, custom step definitions, tags, data generators in Background, JavaScript scenarios, and Selenium/Chromedriver setup.
+---
+
+# Moodle Behat Testing
+
+## Overview
+
+Behat drives a real browser against a dedicated Moodle test site. Features live in `<plugin>/tests/behat/*.feature`. Custom steps go in `tests/behat/behat_<component>.php` extending `behat_base`. Moodle provides hundreds of built-in steps (login, course creation, navigation).
+
+## When to Use
+
+- Writing end-to-end / acceptance tests
+- Testing JavaScript-driven UI (drag-drop, modals, AJAX)
+- Reproducing bugs that need full request cycle + cookies + session
+- Adding scenarios to a plugin's regression suite
+
+**Skip when:** writing unit tests for business logic — use `moodle-phpunit-testing`.
+
+## First-time setup
+
+```bash
+# config.php additions:
+$CFG->behat_wwwroot   = 'http://localhost:8000';
+$CFG->behat_dataroot  = '/var/moodledata_behat';
+$CFG->behat_prefix    = 'beh_';
+
+# Initialize test site:
+php admin/tool/behat/cli/init.php
+
+# Install + start a Selenium-compatible driver (one of):
+docker run -d -p 4444:4444 selenium/standalone-chrome:latest
+# or chromedriver, geckodriver
+
+# Run:
+vendor/bin/behat --config /var/moodledata_behat/behat/behat.yml \
+  --tags @local_example
+```
+
+## Feature file skeleton
+
+```gherkin
+@local_example @javascript
+Feature: Mark attendance
+  In order to track presence
+  As a teacher
+  I need to mark students present
+
+  Background:
+    Given the following "courses" exist:
+      | fullname | shortname |
+      | Maths    | M101      |
+    And the following "users" exist:
+      | username | firstname | lastname |
+      | teacher1 | Tina      | Teach    |
+      | student1 | Sam       | Student  |
+    And the following "course enrolments" exist:
+      | user     | course | role           |
+      | teacher1 | M101   | editingteacher |
+      | student1 | M101   | student        |
+
+  Scenario: Teacher marks a student present
+    Given I log in as "teacher1"
+    And I am on "Maths" course homepage
+    When I follow "Attendance"
+    And I click on "Mark present" "button" in the "Sam Student" "table_row"
+    Then I should see "1 present" in the "Today" "fieldset"
+```
+
+Tags:
+- `@<component>` — required for `--tags` filtering
+- `@javascript` — uses real browser; without it, runs headless (Goutte) — fast but no JS
+- `@_file_upload`, `@_switch_window`, `@_alert` — capability tags so runner can skip on incompatible drivers
+
+## Background data generators
+
+Moodle exposes generators as Behat steps via `behat_data_generators`:
+
+```gherkin
+Given the following "local_example > items" exist:
+  | course | name        | userid    |
+  | M101   | First item  | student1  |
+```
+
+To enable, declare in `tests/generator/lib.php` AND register in `tests/behat/behat_local_example.php`:
+
+```php
+public function get_creatable_entities(): array {
+    return [
+        'items' => [
+            'singular' => 'item',
+            'datagenerator' => 'item',
+            'required' => ['name'],
+            'switchids' => ['course' => 'courseid', 'user' => 'userid'],
+        ],
+    ];
+}
+```
+
+Generator method:
+
+```php
+// in local_example_generator
+public function create_item(array $record): \stdClass {
+    // same as PHPUnit generator
+}
+```
+
+## Custom step definitions
+
+`tests/behat/behat_local_example.php`:
+
+```php
+<?php
+require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
+
+use Behat\Mink\Exception\ExpectationException;
+
+class behat_local_example extends behat_base {
+
+    /**
+     * @Given /^there are (\d+) attendance items$/
+     */
+    public function there_are_n_items(int $count): void {
+        $gen = \testing_util::get_data_generator()
+            ->get_plugin_generator('local_example');
+        for ($i = 0; $i < $count; $i++) {
+            $gen->create_item();
+        }
+    }
+
+    /**
+     * @Then /^the attendance count should be "(\d+)"$/
+     */
+    public function attendance_count_should_be(int $expected): void {
+        global $DB;
+        $actual = $DB->count_records('local_example_items');
+        if ($actual !== $expected) {
+            throw new ExpectationException(
+                "Expected $expected, got $actual",
+                $this->getSession()
+            );
+        }
+    }
+}
+```
+
+Class name **must** match `behat_<component>`. After adding/changing steps:
+
+```bash
+php admin/tool/behat/cli/init.php    # re-scan
+```
+
+## Running
+
+```bash
+# All Behat for plugin
+vendor/bin/behat --config $CFG->behat_dataroot/behat/behat.yml --tags @local_example
+
+# Single feature
+vendor/bin/behat --config ... tests/behat/mark_attendance.feature
+
+# Single scenario (line number)
+vendor/bin/behat --config ... tests/behat/mark_attendance.feature:23
+
+# Parallel (4 runners)
+php admin/tool/behat/cli/init.php --parallel=4
+vendor/bin/moodle_behat_parallel_run --tags @local_example
+```
+
+## Selectors (Mink)
+
+| Type | Example |
+|------|---------|
+| `link` | `I follow "Settings"` |
+| `button` | `I press "Save changes"` |
+| `field` | `I set the field "Name" to "X"` |
+| `select` | `I set the field "Role" to "Manager"` |
+| `checkbox` | `I check "Visible"` |
+| `table_row` | `... in the "Alice" "table_row"` |
+| `fieldset` | `... in the "General" "fieldset"` |
+| `dialogue` | `... in the "Confirm" "dialogue"` |
+| `css_element` | `I click on ".foo .bar" "css_element"` |
+| `xpath_element` | `I click on "//button[@data-x='y']" "xpath_element"` |
+
+## Useful built-in steps
+
+```gherkin
+And I am on the "Course 1" "course" page logged in as "teacher1"
+And I navigate to "Users > Enrolment methods" in current course administration
+And I should see "X" in the "block_settings" "block"
+And I wait until the page is ready
+And I wait "2" seconds                # avoid; prefer wait-until
+And I run the scheduled task "\local_example\task\cleanup"
+And I run all adhoc tasks
+And the following config values are set as admin:
+  | config        | value | plugin        |
+  | enabled       | 1     | local_example |
+```
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Adding step but not running `behat/cli/init.php` | Re-init after every PHP step change |
+| Missing `@javascript` for AJAX UI | Tag scenario `@javascript` and run with browser driver |
+| Hard-coded sleeps `I wait 5 seconds` | Use `I wait until ... exists/disappears` |
+| Class name mismatch | Must be `behat_<component>` |
+| Not switching to dialogue context | Add `in the "..." "dialogue"` selector |
+| Forgetting capability tags (`@_file_upload`) | Add so runner can skip on incompatible browsers |
+| Editing `behat.yml` directly | Regenerated by `init.php` — config in `config.php` instead |
+
+## Debugging
+
+```bash
+# Save HTML+screenshot on failure
+$CFG->behat_faildump_path = '/tmp/behat-fails';
+
+# Run a single scenario in foreground browser
+vendor/bin/behat --config ... --tags @mytag --stop-on-failure -v
+
+# Pause for inspection
+And I should see "this will fail"     # forces a wait you can attach to
+```
+
+## CI snippet
+
+```yaml
+- name: Behat
+  run: |
+    php admin/tool/behat/cli/init.php
+    vendor/bin/behat --config $MOODLE_DATA/behat/behat.yml \
+      --tags @local_example --format=progress
+```
+
+## References
+
+- Behat in Moodle: https://moodledev.io/general/development/tools/behat
+- Writing tests: https://moodledev.io/general/development/tools/behat/writing
+- Step reference: https://moodledev.io/general/development/tools/behat/writing#step-definitions
+- Data generators: https://moodledev.io/docs/apis/subsystems/testing/generators#behat
