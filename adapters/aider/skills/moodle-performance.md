@@ -1,0 +1,336 @@
+# moodle-performance
+
+> Use when optimizing Moodle plugin performance — MUC caching definitions, query optimization, recordsets vs records, ad-hoc and scheduled tasks, lazy loading, OPcache, query log analysis, $PERF, and performance debug toolbar.
+
+# Moodle Performance
+
+## Overview
+
+Moodle bottlenecks: too many DB queries per request, full-table scans, loading large recordsets into memory, blocking work on the request path. Mitigations: MUC caching, indexes, recordsets, ad-hoc tasks, careful capability checks.
+
+## When to Use
+
+- Page renders slowly / hits per-page query limits
+- N+1 query pattern in loops
+- Memory-blow on large datasets
+- Long-running operations on POST handlers
+- Tuning a custom report or scheduled task
+
+## Diagnosis
+
+### Performance debug
+
+`config.php`:
+
+```php
+$CFG->debug = (E_ALL | E_STRICT);
+$CFG->debugdisplay = 1;
+$CFG->perfdebug = 15;     // shows query count + timings in footer
+```
+
+Site admin > Development > Debugging > Performance info: enables the footer toolbar (queries, time, memory, MUC hits/misses, sessions reads/writes).
+
+### `$PERF`
+
+```php
+global $PERF;
+$start = microtime(true);
+// ... work ...
+$PERF->dbqueries++;       // your manual counter
+mtrace('Took ' . round(microtime(true) - $start, 3) . 's');
+```
+
+### Slow query log
+
+Postgres / MySQL slow-query log — turn on in dev. Moodle prefixes queries with the source class via `$CFG->dboptions['debug']`.
+
+## MUC — Moodle Universal Cache
+
+3 cache modes:
+
+| Mode | Storage | Lifetime | Use |
+|------|---------|----------|-----|
+| `MODE_APPLICATION` | Persistent (file/Redis/Memcached) | Until invalidated | Shared computed values |
+| `MODE_SESSION` | Session | Session lifetime | Per-user computed values |
+| `MODE_REQUEST` | PHP request | Single request | Memoize within request |
+
+### Define a cache
+
+`db/caches.php`:
+
+```php
+<?php
+defined('MOODLE_INTERNAL') || die();
+
+$definitions = [
+    'active_announcements' => [
+        'mode'         => cache_store::MODE_APPLICATION,
+        'simplekeys'   => true,
+        'simpledata'   => true,
+        'ttl'          => 600,
+        'invalidationevents' => ['changesin_local_announcements'],
+    ],
+    'user_dashboard' => [
+        'mode'       => cache_store::MODE_SESSION,
+        'simplekeys' => true,
+    ],
+];
+```
+
+Bump `version.php` after edits.
+
+### Use the cache
+
+```php
+$cache = \cache::make('local_announcements', 'active_announcements');
+$value = $cache->get('all');
+if ($value === false) {
+    $value = $this->compute_announcements();
+    $cache->set('all', $value);
+}
+return $value;
+```
+
+### Invalidate
+
+```php
+\cache_helper::invalidate_by_event('changesin_local_announcements', ['all']);
+// or
+$cache->delete('all');
+$cache->purge();
+```
+
+Trigger invalidation from a settings save or an observer.
+
+### `simplekeys` / `simpledata`
+
+- `simplekeys: true` — keys are alphanum (skips hashing) — faster
+- `simpledata: true` — values are scalars/arrays of scalars (skips serialization) — much faster
+
+Use both whenever possible.
+
+### Static cache (per-request)
+
+```php
+$cache = \cache::make('local_announcements', 'request_lookup');
+// MODE_REQUEST in caches.php — auto-cleared at end of request
+```
+
+## DB optimization
+
+### Recordsets for large data
+
+```php
+// BAD — loads everything into memory
+$rows = $DB->get_records('huge_table');
+foreach ($rows as $r) { /* ... */ }
+
+// GOOD — streams
+$rs = $DB->get_recordset('huge_table');
+foreach ($rs as $r) { /* ... */ }
+$rs->close();      // ALWAYS close
+```
+
+Use `get_recordset_sql` with `LIMIT` + offset for batched processing of millions of rows.
+
+### Avoid N+1
+
+```php
+// BAD
+foreach ($courses as $c) {
+    $teacher = $DB->get_record('user', ['id' => $c->teacherid]);
+}
+
+// GOOD — single query
+$tids = array_column($courses, 'teacherid');
+[$insql, $params] = $DB->get_in_or_equal($tids);
+$teachers = $DB->get_records_sql("SELECT * FROM {user} WHERE id $insql", $params);
+```
+
+### Indexes
+
+```xml
+<INDEX NAME="userid-courseid" UNIQUE="false" FIELDS="userid, courseid"/>
+```
+
+Edit via XMLDB editor. Composite index column order matters — most-selective first, leftmost-prefix usable for partial queries.
+
+### `EXPLAIN` your queries
+
+```bash
+mysql> EXPLAIN SELECT ... ;
+postgres=# EXPLAIN ANALYZE SELECT ... ;
+```
+
+Look for:
+- `type: ALL` (full scan) — needs index
+- `Using filesort` / `Using temporary` — sort spilling
+- High `rows` estimate — selectivity issue
+
+## Move work off the request
+
+### Ad-hoc task — fire-and-forget
+
+```php
+// classes/task/send_report.php
+namespace local_example\task;
+class send_report extends \core\task\adhoc_task {
+    public function execute(): void {
+        $data = $this->get_custom_data();
+        // do work
+    }
+}
+
+// trigger:
+$task = new \local_example\task\send_report();
+$task->set_custom_data(['userid' => $user->id, 'reportid' => $r->id]);
+$task->set_userid($user->id);     // runs as that user
+\core\task\manager::queue_adhoc_task($task);
+```
+
+Tasks run via cron. Long jobs don't block HTTP request.
+
+### Scheduled task — recurring
+
+`db/tasks.php`:
+
+```php
+$tasks = [[
+    'classname' => 'local_example\task\cleanup',
+    'blocking'  => 0,
+    'minute'    => '0',
+    'hour'      => '3',
+    'day'       => '*',
+    'month'     => '*',
+    'dayofweek' => '*',
+]];
+```
+
+```php
+class cleanup extends \core\task\scheduled_task {
+    public function get_name(): string {
+        return get_string('task:cleanup', 'local_example');
+    }
+    public function execute(): void {
+        // ...
+    }
+}
+```
+
+Run cron: `php admin/cli/cron.php`. Production: cron entry every minute.
+
+### Locks for non-overlapping execution
+
+```php
+$locktype = 'local_example_cleanup';
+$lockfactory = \core\lock\lock_config::get_lock_factory($locktype);
+if (!$lock = $lockfactory->get_lock('main', 5)) {
+    return;     // another instance running
+}
+try {
+    // ...
+} finally {
+    $lock->release();
+}
+```
+
+## Capability check optimization
+
+`has_capability()` is expensive at scale. For lists:
+
+```php
+// BAD — N capability checks
+foreach ($users as $u) {
+    if (has_capability('mod/quiz:attempt', $context, $u)) { /* ... */ }
+}
+
+// GOOD — single batched query
+$users = get_users_by_capability($context, 'mod/quiz:attempt', 'u.id, u.firstname, u.lastname');
+```
+
+## Output / page
+
+```php
+$PAGE->set_pagelayout('embedded');     // skips heavy regions when appropriate
+$PAGE->add_body_class('skip-some-blocks');
+```
+
+Lazy-load AMD modules:
+
+```javascript
+// only load when needed
+const onClick = async () => {
+    const {init} = await import('local_example/heavy');
+    init();
+};
+```
+
+## OPcache + APCu
+
+`php.ini`:
+
+```ini
+opcache.enable = 1
+opcache.memory_consumption = 256
+opcache.max_accelerated_files = 20000
+opcache.validate_timestamps = 0    # production only
+opcache.revalidate_freq = 0
+```
+
+Moodle benefits massively from OPcache. With `validate_timestamps=0`, restart PHP after deploys.
+
+APCu for Moodle config cache: `$CFG->localcachedir = '/var/cache/moodle';`
+
+## Sessions
+
+- Use Redis sessions in production (`$CFG->session_handler_class = '\core\session\redis'`)
+- File sessions don't scale past one app server
+- Session writes — see "session lock" issues if multiple AJAX requests block on session
+
+```php
+// release session lock early when only reading
+\core\session\manager::write_close();
+```
+
+## Frontend
+
+- Run `npx grunt amd` — production builds are minified
+- Enable browser caching: `$CFG->cachejs = true; $CFG->cachetemplates = true;`
+- Theme designer mode (`$CFG->themedesignermode`) — OFF in production (disables CSS cache)
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| `get_records` on huge table | `get_recordset` + close |
+| N+1 in loops | Batch with `get_in_or_equal` |
+| Sending email on POST | Move to ad-hoc task |
+| `has_capability` per row | `get_users_by_capability` |
+| MUC without `simplekeys`/`simpledata` | Set both true when possible |
+| MUC `MODE_REQUEST` for cross-request data | Use `MODE_APPLICATION` |
+| Long lock without try/finally | Release in `finally` block always |
+| Theme designer mode on prod | Off — kills CSS caching |
+| `validate_timestamps = 1` | OFF in prod, restart on deploy |
+| Forgetting `$rs->close()` | Recordset leaks — always close |
+| File sessions on multi-app-server | Switch to Redis/Memcached |
+
+## Profiling
+
+`xhprof` / `tideways`:
+
+```php
+// quick on-demand profile
+$CFG->profilingenabled = true;
+$CFG->profilingautostart = false;
+// add ?PROFILEME to URL — view in admin/tool/profiling
+```
+
+Per-request: `Site admin > Development > Profiling`.
+
+## References
+
+- MUC: https://moodledev.io/docs/apis/subsystems/muc
+- Tasks API: https://moodledev.io/docs/apis/core/task
+- Performance recommendations: https://docs.moodle.org/en/Performance_recommendations
+- DB API recordsets: https://moodledev.io/docs/apis/core/dml#get_recordset
+- Profiling: https://moodledev.io/general/development/tools/profiling
