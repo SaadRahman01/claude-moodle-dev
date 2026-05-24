@@ -1,7 +1,7 @@
 {
   "name": "moodle-dev",
-  "version": "0.2.0",
-  "description": "The most complete Moodle development toolkit for Claude Code: 12 skills, 6 slash commands, 2 subagents covering scaffolding, XMLDB, capabilities, web services, AMD JS, PHPUnit, Behat, security, privacy/GDPR, performance, accessibility, themes, mobile, and cross-version upgrades.",
+  "version": "0.3.0",
+  "description": "The most complete Moodle development toolkit: 13 skills, 8 slash commands, 2 subagents — covering scaffolding, XMLDB, capabilities, web services, Hooks API, AMD JS, PHPUnit, Behat, security, privacy/GDPR, performance, accessibility, themes, mobile, and cross-version upgrades. Ships with adapters for Cursor, Copilot, Aider, and Continue.",
   "author": {
     "name": "Saad Rahman",
     "email": "saad.rahman010@gmail.com"
