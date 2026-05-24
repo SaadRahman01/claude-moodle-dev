@@ -1,10 +1,15 @@
 # moodle-dev
 
-> The most complete Moodle development toolkit for [Claude Code](https://docs.anthropic.com/claude/docs/claude-code) — skills, slash commands, and subagents that turn Claude into a Moodle expert.
+> The most complete Moodle development toolkit for AI coding assistants — skills, slash commands, and subagents that turn your assistant into a Moodle expert.
+> **Native plugin for [Claude Code](https://docs.anthropic.com/claude/docs/claude-code); ships with adapters for [Cursor](adapters/cursor/), [GitHub Copilot](adapters/copilot/), [Aider](adapters/aider/), [Continue](adapters/continue/), and a [paste-anywhere bundle](adapters/generic/PROMPTS.md).**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-8A2BE2.svg)](https://docs.anthropic.com/claude/docs/claude-code)
+[![Cursor](https://img.shields.io/badge/Cursor-Rules-black.svg)](adapters/cursor/)
+[![Copilot](https://img.shields.io/badge/Copilot-Chatmodes-24292e.svg)](adapters/copilot/)
+[![Aider](https://img.shields.io/badge/Aider-Conventions-orange.svg)](adapters/aider/)
+[![Continue](https://img.shields.io/badge/Continue-Rules-blueviolet.svg)](adapters/continue/)
 [![Moodle 4.x](https://img.shields.io/badge/Moodle-4.x%20%7C%205.x-orange.svg)](https://moodledev.io)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -31,25 +36,44 @@ This plugin teaches Claude all of it. Auto-activates when Claude detects Moodle 
 
 ## Install
 
-### Claude Code marketplace (recommended)
+### Claude Code (native plugin)
 
 ```
-/plugin marketplace add SaadRahman01/claude-moodle-dev
+/plugin marketplace add https://github.com/SaadRahman01/claude-moodle-dev
 /plugin install moodle-dev@moodle-dev
 ```
 
-### Local development
+(If `git@github.com` SSH auth fails, use the full `https://` URL as shown above.)
 
-```
-/plugin marketplace add /absolute/path/to/claude-moodle-dev
-/plugin install moodle-dev@moodle-dev
+Local dev: `/plugin marketplace add /absolute/path/to/claude-moodle-dev`.
+Verify: `/plugin list`.
+
+### Cursor
+
+Copy `adapters/cursor/.cursor/` into your project (or `~/.cursor/` for global use). Each skill becomes an on-demand rule; agents and commands surface via `@<name>` mentions in chat.
+
+### GitHub Copilot
+
+Copy `adapters/copilot/.github/` into your repo. `copilot-instructions.md` is applied to every chat in the repo; per-skill chatmodes appear in the chat-mode picker.
+
+### Aider
+
+Drop `adapters/aider/CONVENTIONS.md` into your project root and add it to `.aider.conf.yml`:
+
+```yaml
+read:
+  - CONVENTIONS.md
 ```
 
-Verify install:
+Load individual skills on demand with `/read-only adapters/aider/skills/<name>.md`.
 
-```
-/plugin list
-```
+### Continue.dev
+
+Copy `adapters/continue/` into `~/.continue/` (merge with existing `config.yaml`). Skills load as rules; commands appear as slash prompts.
+
+### Any other assistant
+
+Paste relevant sections from [`adapters/generic/PROMPTS.md`](adapters/generic/PROMPTS.md) — it's one self-contained markdown file with every skill, agent, and command. Works with anything that takes a system prompt.
 
 ---
 
@@ -71,6 +95,7 @@ Verify install:
 | `moodle-theme-development` | Boost child themes, SCSS, layouts |
 | `moodle-upgrade-migration` | Cross-version upgrades, deprecations |
 | `moodle-mobile-app` | Mobile app remote templates, addons |
+| `moodle-hooks-api` | 4.4+ Hooks API: authoring, listening, migrating magic callbacks |
 
 ### Slash commands
 
@@ -82,6 +107,8 @@ Verify install:
 | `/moodle-security-review` | Run security checklist on a file/plugin |
 | `/moodle-string-check` | Find hard-coded English needing `get_string` |
 | `/moodle-codestyle` | Run `phpcs` with Moodle ruleset |
+| `/moodle-mustache-lint` | Lint Mustache templates: a11y, security, hard-coded strings |
+| `/moodle-capability-audit` | Cross-check `db/access.php` against runtime `has_capability` use |
 
 ### Subagents
 
@@ -148,43 +175,28 @@ See [EXAMPLES.md](EXAMPLES.md) for 30+ prompts covering scaffolding, upgrades, t
 ## Repository layout
 
 ```
-.claude-plugin/
-  marketplace.json
-  plugin.json
-skills/
-  moodle-plugin-development/SKILL.md
-  moodle-phpunit-testing/SKILL.md
-  moodle-behat-testing/SKILL.md
-  moodle-amd-javascript/SKILL.md
-  moodle-web-services/SKILL.md
-  moodle-security-audit/SKILL.md
-  moodle-privacy-gdpr/SKILL.md
-  moodle-performance/SKILL.md
-  moodle-accessibility/SKILL.md
-  moodle-theme-development/SKILL.md
-  moodle-upgrade-migration/SKILL.md
-  moodle-mobile-app/SKILL.md
-commands/
-  moodle-new-plugin.md
-  moodle-bump-version.md
-  moodle-privacy-audit.md
-  moodle-security-review.md
-  moodle-string-check.md
-  moodle-codestyle.md
-agents/
-  moodle-reviewer.md
-  moodle-scaffolder.md
-.github/
-  ISSUE_TEMPLATE/
-  PULL_REQUEST_TEMPLATE.md
-  workflows/lint.yml
-EXAMPLES.md
-CONTRIBUTING.md
-CODE_OF_CONDUCT.md
-CHANGELOG.md
-LICENSE
-README.md
+.claude-plugin/         # Claude Code plugin manifest
+skills/                 # canonical skills (Claude reads these directly)
+agents/                 # canonical subagents
+commands/               # canonical slash commands
+
+adapters/               # generated per-assistant — DO NOT hand-edit
+  cursor/.cursor/rules/*.mdc
+  copilot/.github/copilot-instructions.md + chatmodes/*.chatmode.md
+  aider/CONVENTIONS.md + skills/ + commands/
+  continue/config.yaml + rules/ + prompts/
+  generic/PROMPTS.md    # paste-anywhere single-file bundle
+
+scripts/build-adapters.py   # regenerates adapters/ from canonical files
+.githooks/pre-commit        # phpcs + PHPUnit + version.php monotonicity (install: git config core.hooksPath .githooks)
+.github/workflows/lint.yml  # CI: JSON, frontmatter, adapter sync, broken links
 ```
+
+### Editing workflow
+
+1. Edit canonical files under `skills/`, `agents/`, or `commands/`.
+2. Run `python3 scripts/build-adapters.py` to regenerate adapters.
+3. Commit both. CI fails if `adapters/` drifts from canonical source.
 
 ---
 
