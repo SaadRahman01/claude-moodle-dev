@@ -56,3 +56,44 @@ jobs:
             exit 1
           fi
           echo "Version $plugin_v in sync"
+
+      - name: Adapters in sync with prompts
+        run: |
+          python3 scripts/build-adapters.py >/dev/null
+          if ! git diff --quiet adapters/; then
+            echo "::error::adapters/ out of sync — run: python3 scripts/build-adapters.py && commit"
+            git --no-pager diff --stat adapters/
+            exit 1
+          fi
+          echo "Adapters in sync."
+
+      - name: Skill filename matches frontmatter name
+        run: |
+          fail=0
+          for f in skills/*/SKILL.md; do
+            dir=$(basename "$(dirname "$f")")
+            name=$(grep -m1 "^name:" "$f" | sed 's/name:[[:space:]]*//')
+            if [ "$dir" != "$name" ]; then
+              echo "::error file=$f::dir name '$dir' != frontmatter name '$name'"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: No broken intra-repo links
+        run: |
+          fail=0
+          # Find markdown links like (path/file.md) and check files exist when path is relative & non-URL
+          while IFS= read -r line; do
+            file=$(echo "$line" | cut -d: -f1)
+            target=$(echo "$line" | sed -E 's/.*\(([^)]+)\).*/\1/' | sed 's/#.*//')
+            case "$target" in
+              http*|mailto*|"") continue ;;
+            esac
+            dir=$(dirname "$file")
+            full="$dir/$target"
+            if [ ! -e "$full" ] && [ ! -e "$target" ]; then
+              echo "::warning file=$file::link target not found: $target"
+            fi
+          done < <(grep -rEn '\]\([^)]+\.md[^)]*\)' --include='*.md' . || true)
+          exit $fail
