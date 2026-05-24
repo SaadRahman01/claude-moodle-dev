@@ -1,0 +1,42 @@
+name: moodle-dev
+version: 0.3.0
+schema: v1
+rules:
+  - uses: ./rules/moodle-accessibility.md
+  - uses: ./rules/moodle-amd-javascript.md
+  - uses: ./rules/moodle-behat-testing.md
+  - uses: ./rules/moodle-hooks-api.md
+  - uses: ./rules/moodle-mobile-app.md
+  - uses: ./rules/moodle-performance.md
+  - uses: ./rules/moodle-phpunit-testing.md
+  - uses: ./rules/moodle-plugin-development.md
+  - uses: ./rules/moodle-privacy-gdpr.md
+  - uses: ./rules/moodle-security-audit.md
+  - uses: ./rules/moodle-theme-development.md
+  - uses: ./rules/moodle-upgrade-migration.md
+  - uses: ./rules/moodle-web-services.md
+prompts:
+  - name: moodle-bump-version
+    description: Bump version.php and add an upgrade.php step for a Moodle plugin.
+    prompt: ./prompts/moodle-bump-version.md
+  - name: moodle-capability-audit
+    description: Audit a plugin's capabilities — verifies db/access.php declarations match runtime require_capability/has_capability calls, checks risk bitmasks, default archetypes, and lang strings.
+    prompt: ./prompts/moodle-capability-audit.md
+  - name: moodle-codestyle
+    description: Run phpcs with the Moodle coding standard and fix reported issues.
+    prompt: ./prompts/moodle-codestyle.md
+  - name: moodle-mustache-lint
+    description: Lint Mustache templates for accessibility, security, hard-coded strings, and Moodle template conventions.
+    prompt: ./prompts/moodle-mustache-lint.md
+  - name: moodle-new-plugin
+    description: Scaffold a new Moodle plugin (asks for type + name).
+    prompt: ./prompts/moodle-new-plugin.md
+  - name: moodle-privacy-audit
+    description: Audit a Moodle plugin's privacy provider for completeness against its DB schema.
+    prompt: ./prompts/moodle-privacy-audit.md
+  - name: moodle-security-review
+    description: Run the Moodle security checklist on a file, directory, or entire plugin.
+    prompt: ./prompts/moodle-security-review.md
+  - name: moodle-string-check
+    description: Find hard-coded English strings that should use get_string() / Mustache {{#str}}.
+    prompt: ./prompts/moodle-string-check.md

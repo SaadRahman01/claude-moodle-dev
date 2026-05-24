@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Pre-commit hook for Moodle plugin development.
+#
+# Install:
+#   git config core.hooksPath .githooks
+#
+# Behavior:
+#   - Runs phpcs (Moodle standard) on staged .php files, if available.
+#   - Runs PHPUnit on tests whose file paths appear in staged changes, if vendor/bin/phpunit exists.
+#   - Validates that any staged version.php bump is monotonic (YYYYMMDDXX format).
+#   - Skips with `git commit --no-verify` (do not skip silently — fix issues).
+
+set -euo pipefail
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+fail=0
+
+staged_php=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.php$' || true)
+staged_tests=$(echo "$staged_php" | grep -E '_test\.php$' || true)
+
+# --- phpcs (Moodle coding standard) ---
+if [[ -n "$staged_php" ]]; then
+  if command -v phpcs >/dev/null 2>&1; then
+    if phpcs -i 2>/dev/null | grep -qi moodle; then
+      echo -e "${YELLOW}» phpcs (Moodle standard) on staged PHP...${NC}"
+      if ! phpcs --standard=moodle --colors $staged_php; then
+        echo -e "${RED}  phpcs failed.${NC}"
+        fail=1
+      fi
+    else
+      echo -e "${YELLOW}» phpcs found but Moodle standard not installed — skipping. Install: composer global require moodlehq/moodle-cs${NC}"
+    fi
+  else
+    echo -e "${YELLOW}» phpcs not installed — skipping coding standards check.${NC}"
+  fi
+fi
+
+# --- PHPUnit on staged tests ---
+if [[ -n "$staged_tests" && -x vendor/bin/phpunit ]]; then
+  echo -e "${YELLOW}» PHPUnit on staged tests...${NC}"
+  for t in $staged_tests; do
+    if ! vendor/bin/phpunit --no-coverage "$t"; then
+      echo -e "${RED}  PHPUnit failed: $t${NC}"
+      fail=1
+    fi
+  done
+elif [[ -n "$staged_tests" ]]; then
+  echo -e "${YELLOW}» Tests staged but vendor/bin/phpunit not found — skipping.${NC}"
+fi
+
+# --- version.php monotonic bump ---
+for vf in $(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)version\.php$' || true); do
+  old=$(git show "HEAD:$vf" 2>/dev/null | grep -oE "\\\$plugin->version\s*=\s*[0-9]+" | grep -oE '[0-9]+' || echo "0")
+  new=$(grep -oE "\\\$plugin->version\s*=\s*[0-9]+" "$vf" | grep -oE '[0-9]+' || echo "0")
+  if [[ "$new" -le "$old" ]]; then
+    echo -e "${RED}» version.php: $vf — new version ($new) must be > old ($old)${NC}"
+    fail=1
+  else
+    echo -e "${GREEN}» version.php: $vf bumped $old -> $new${NC}"
+  fi
+done
+
+if [[ "$fail" -ne 0 ]]; then
+  echo -e "${RED}Pre-commit checks failed. Fix issues or use --no-verify (not recommended).${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Pre-commit checks passed.${NC}"
+exit 0

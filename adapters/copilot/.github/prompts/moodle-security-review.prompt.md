@@ -1,0 +1,63 @@
+---
+mode: 'agent'
+description: Run the Moodle security checklist on a file, directory, or entire plugin.
+---
+You will perform a Moodle-specific security review.
+
+User's input: ${input:args}
+
+Activate the `moodle-security-audit` skill for context.
+
+If `${input:args}` is empty, ask for a file or plugin path.
+
+Audit each PHP file in scope against this checklist. Report findings as:
+
+```
+[FILE]:[LINE] [SEVERITY] [CATEGORY] — [issue]
+                                         FIX: [actionable fix]
+```
+
+Severities: `CRITICAL` (exploitable now), `HIGH` (privilege escalation / data leak), `MEDIUM` (defense in depth), `LOW` (style / hardening).
+
+## Checklist
+
+For every entry script (file with `require('config.php')` or similar):
+1. `require_login()` present and called early
+2. `require_capability()` against the **object's** context (not arbitrary system context)
+3. `require_sesskey()` on every state-changing request (POST or mutating GET)
+4. All input via `required_param`/`optional_param` with appropriate `PARAM_*` type — flag any `$_GET`/`$_POST`/`$_REQUEST` usage
+
+For every DB call:
+5. Uses `$DB->...` — flag any `mysqli_*`, `PDO`, `mysql_*`
+6. Placeholders (`?` / `:name`) — flag string concatenation in SQL
+7. `LIKE` patterns use `$DB->sql_like()` + `sql_like_escape()`
+8. `IN (...)` uses `$DB->get_in_or_equal()`
+
+For every output:
+9. User text rendered via `s()`, `format_string()`, `format_text()` — flag direct `echo $var`
+10. `format_string`/`format_text` is called with a `context`
+11. Mustache `{{{var}}}` raw output is justified (text already passed through `format_text`)
+
+For file APIs:
+12. `pluginfile.php` callback re-checks capability inside callback
+13. Files are served via `\file_storage` + `send_stored_file`, never raw `$CFG->dataroot`
+14. Uploads use `file_save_draft_area_files` with `maxfiles`, `maxbytes`, `accepted_types`
+
+For HTTP / external:
+15. Uses `\curl` wrapper, not raw `curl_exec()` / `file_get_contents($url)`
+16. Open redirects: `redirect($next)` with `$next` from user input is validated against site host
+
+For secrets:
+17. No tokens / API keys committed in source — use `set_config`/`get_config`
+
+For dangerous PHP:
+18. No `eval()`, `create_function()`, `unserialize()` on user input
+19. `print_error` is replaced with `throw new \moodle_exception()`
+
+For sessions:
+20. `\core\session\manager::write_close()` called early on AJAX endpoints that don't write session
+
+After audit:
+- Print summary: `N CRITICAL, N HIGH, N MEDIUM, N LOW`
+- Offer to apply fixes one-by-one or as a single patch (ask before writing)
+- For unresolved CRITICAL findings, recommend not deploying until fixed
