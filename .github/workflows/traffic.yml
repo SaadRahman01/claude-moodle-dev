@@ -1,0 +1,36 @@
+name: Traffic snapshot
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch traffic
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          date=$(date -u +%Y-%m-%d)
+          gh api "repos/$REPO/traffic/clones"           > "out/clones-$date.json"
+          gh api "repos/$REPO/traffic/views"            > "out/views-$date.json"
+          gh api "repos/$REPO/traffic/popular/referrers" > "out/refs-$date.json"
+          gh api "repos/$REPO/traffic/popular/paths"     > "out/paths-$date.json"
+          jq '{uniques, count}' "out/clones-$date.json" > "out/_summary-clones-$date.json"
+          jq '{uniques, count}' "out/views-$date.json"  > "out/_summary-views-$date.json"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: traffic-${{ github.run_id }}
+          path: out/
+          retention-days: 90
+          if-no-files-found: error
