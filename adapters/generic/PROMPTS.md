@@ -1886,10 +1886,10 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_example';      // frankenstyle, must match dir
 $plugin->version   = 2026042500;           // YYYYMMDDXX, bump on any db/capability change
-$plugin->requires  = 2022112800;           // min Moodle version
+$plugin->requires  = 2024100700;           // min Moodle version (4.5 LTS); use 2025041400 for 5.0+, 2025100600 for 5.1+, 2026042000 for 5.2+
 $plugin->release   = '1.0.0';
 $plugin->maturity  = MATURITY_STABLE;      // ALPHA | BETA | RC | STABLE
-$plugin->dependencies = ['mod_quiz' => 2022112800];  // optional
+$plugin->dependencies = ['mod_quiz' => 2024100700];  // optional
 ```
 
 ## db/install.xml + upgrade.php
@@ -2971,7 +2971,7 @@ php admin/cli/build_theme_css.php --themes=yourtheme
 
 ### moodle-upgrade-migration
 
-> Use when upgrading a Moodle plugin across versions, fixing deprecated API usage, or migrating to Moodle 4.x/5.x conventions — print_error, add_to_log, formslib changes, external_api namespace, Hooks API, PSR-4 migration, and required upgrade.txt notes.
+> Use when upgrading a Moodle plugin across versions, fixing deprecated API usage, or migrating to Moodle 4.x/5.x (incl. 5.1/5.2) conventions — print_error, add_to_log, formslib changes, external_api namespace, Hooks API, /public doc-root, Routing Engine, PSR-4 migration, PHP 8.1–8.4 upgrades, and required upgrade.txt notes.
 
 # Moodle Upgrade & Migration
 
@@ -2983,7 +2983,7 @@ Moodle deprecates aggressively but rarely removes. Code from Moodle 2.x often st
 
 - Upgrading a plugin to support a newer Moodle version
 - Resolving deprecation warnings
-- Migrating to PHP 8.1+ / 8.2 / 8.3
+- Migrating to PHP 8.1 / 8.2 / 8.3 / 8.4
 - Plugin directory submission rejection ("uses deprecated API")
 - Cross-version compat (`$plugin->requires` bump)
 
@@ -3049,6 +3049,19 @@ Moodle deprecates aggressively but rarely removes. Code from Moodle 2.x often st
 
 - `#[\Override]` attribute encouraged
 - `Date_Create_From_Format` strict-ness
+- Typed class constants supported
+
+### → PHP 8.4
+
+- Implicit nullable params now hard-deprecated: `function f(string $x = null)` → `function f(?string $x = null)`
+- Optional param before required param deprecated — reorder so optionals come last
+- `E_STRICT` constant removed (was already a no-op)
+- `trigger_error(..., E_USER_ERROR)` deprecated — throw an exception instead
+- CSV functions: `fputcsv()` / `fgetcsv()` / `str_getcsv()` default `$escape` deprecated — pass `''` explicitly to opt out of legacy escape
+- `xml_set_*_handler` string-callable form deprecated — pass `[$obj, 'method']` or first-class callable
+- `mysqli_kill()`, `mysqli_refresh()`, `mysqli_ping()` deprecated — irrelevant to Moodle ($DB layer), but flag in custom code
+- `DatePeriod` ISO8601 string constructor deprecated → `DatePeriod::createFromISO8601String()`
+- `mb_trim()`, `mb_ltrim()`, `mb_rtrim()` added — prefer over manual regex trimming for multibyte
 
 ## Moodle 3.x → 4.x
 
@@ -3116,9 +3129,9 @@ class content extends \core_courseformat\output\local\content { /* ... */ }
 
 ## Moodle 4.x → 5.x
 
-5.0 still in early phase — verify against release notes:
+### 5.0 (2025-04)
 
-- PHP 8.2 minimum (5.0+)
+- PHP 8.2 minimum
 - Bootstrap 5 fully replaces Bootstrap 4 utility classes
   - `.sr-only` → `.visually-hidden`
   - `.float-left` → `.float-start`
@@ -3127,7 +3140,35 @@ class content extends \core_courseformat\output\local\content { /* ... */ }
 - Some 4.x deprecations finalize
 - New AI subsystem (`\core_ai`)
 
-Always check `/lib/upgrade.txt` and per-component `upgrade.txt` for the target version.
+### 5.1 (2025-10-06)
+
+- **PHP 8.2 min, 8.3 & 8.4 supported.** Sodium ext required. 64-bit only. `max_input_vars` ≥ 5000.
+- **`/public` document root.** Web server must point at `<moodleroot>/public`. Plugins still live above (`/local/...`, `/mod/...`) — installer relocates; manual moves needed for in-place upgrades.
+- **Routing Engine** (optional, BC-safe) — new request dispatcher + cleaner URLs.
+- Deprecations:
+  - `file_encode_url()` deprecated → use `moodle_url::make_pluginfile_url()`
+  - Device-related theme functions final-deprecated
+  - Quiz callback classes/functions deprecated (see `mod/quiz/UPGRADING.md`)
+  - `course/changenumsections.php` page removed
+  - Course "max sections" setting removed
+- DB prefix max length now 10 chars.
+- Always check per-component `UPGRADING.md` (5.1 replaces `upgrade.txt` for API change notes).
+
+### 5.2 (2026-04-20)
+
+- **PHP 8.3 min, 8.4 supported.**
+- **Upgrade path:** must come from 4.4 or later. Older → upgrade through 4.4/5.0/5.1 first.
+- **Oracle DB removed.** Minimums bumped: PostgreSQL 16, MySQL 8.4, MariaDB 10.11, SQL Server 2019.
+- **React in core** — base library available via importmaps; new UI code may use React components.
+- Composer support for third-party library installation in plugins.
+- OpenTelemetry integration.
+- Final deprecations:
+  - `core/modal_factory`, `core/modal_registry` (AMD) — use `core/modal` directly
+  - Pre-PHP 7 style constructors removed (no method named after class)
+  - Everything in `lib/deprecatedlib.php` from ≤ 4.4 removed
+- New/expanded web services: `site_info`, `mobile_config`, `choice_results`.
+
+Always check `/public/lib/upgrade.txt` (path changed in 5.1) and per-component `UPGRADING.md` for the target version.
 
 ## upgrade.txt convention
 

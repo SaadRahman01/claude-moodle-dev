@@ -61,10 +61,10 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_example';      // frankenstyle, must match dir
 $plugin->version   = 2026042500;           // YYYYMMDDXX, bump on any db/capability change
-$plugin->requires  = 2022112800;           // min Moodle version
+$plugin->requires  = 2024100700;           // min Moodle version (4.5 LTS); use 2025041400 for 5.0+, 2025100600 for 5.1+, 2026042000 for 5.2+
 $plugin->release   = '1.0.0';
 $plugin->maturity  = MATURITY_STABLE;      // ALPHA | BETA | RC | STABLE
-$plugin->dependencies = ['mod_quiz' => 2022112800];  // optional
+$plugin->dependencies = ['mod_quiz' => 2024100700];  // optional
 ```
 
 ## db/install.xml + upgrade.php

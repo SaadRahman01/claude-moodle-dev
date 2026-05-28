@@ -5,6 +5,26 @@ All notable changes to `moodle-dev` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-28
+
+### Added
+
+- **Moodle 5.1 support** (released 2025-10-06): `/public` document root, Routing Engine, PHP 8.2 min with 8.3/8.4 supported, sodium ext requirement, DB prefix 10-char cap.
+- **Moodle 5.2 support** (releases 2026-04-20): PHP 8.3 min with 8.4 supported, upgrade path from 4.4+, Oracle removed, DB minimums bumped (PostgreSQL 16 / MySQL 8.4 / MariaDB 10.11 / MSSQL 2019), React in core via importmaps, Composer for third-party libs, OpenTelemetry.
+- **PHP 8.4 migration section** in `moodle-upgrade-migration` skill: implicit nullable params hard-deprecation, `E_STRICT` removal, CSV escape param, XML callable form, `mb_trim()` family, `DatePeriod::createFromISO8601String()`.
+- 5.1 deprecations catalogued: `file_encode_url()`, device theme functions, quiz callback classes, `course/changenumsections.php`, course max-sections setting.
+- 5.2 final deprecations catalogued: `core/modal_factory`, `core/modal_registry`, pre-PHP 7 constructors, ≤ 4.4 `lib/deprecatedlib.php` entries.
+
+### Changed
+
+- README compatibility table extended through Moodle 5.2; PHP support line clarified per Moodle release.
+- `moodle-plugin-development` `version.php` example uses 4.5 LTS (`2024100700`) as `$plugin->requires` with inline cheatsheet for 5.0/5.1/5.2 minimums.
+- Adapters regenerated for Cursor, Copilot, Aider, Continue, generic bundle.
+
+### Compatibility notes
+
+- Projects targeting Moodle ≤ 5.0 / PHP ≤ 8.3: pin to tag `v0.3.0` or use the `moodle-4.x-5.0` maintenance branch.
+
 ## [0.3.0] - 2026-05-23
 
 ### Added

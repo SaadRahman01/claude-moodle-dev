@@ -4,7 +4,7 @@
 > **Native plugin for [Claude Code](https://docs.anthropic.com/claude/docs/claude-code); ships with adapters for [Cursor](adapters/cursor/), [GitHub Copilot](adapters/copilot/), [Aider](adapters/aider/), [Continue](adapters/continue/), and a [paste-anywhere bundle](adapters/generic/PROMPTS.md).**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-8A2BE2.svg)](https://docs.anthropic.com/claude/docs/claude-code)
 [![Cursor](https://img.shields.io/badge/Cursor-Rules-black.svg)](adapters/cursor/)
 [![Copilot](https://img.shields.io/badge/Copilot-Chatmodes-24292e.svg)](adapters/copilot/)
@@ -204,14 +204,16 @@ scripts/build-adapters.py   # regenerates adapters/ from canonical files
 
 | Moodle | Status |
 |--------|--------|
+| 5.2    | supported (PHP 8.3 min, `/public` doc-root, React core, Oracle dropped — releases 2026-04-20) |
+| 5.1    | supported (PHP 8.2 min, `/public` doc-root introduced, Routing Engine) |
 | 5.0    | supported |
-| 4.5    | supported |
+| 4.5    | supported (LTS) |
 | 4.4    | supported (Hooks API) |
 | 4.3    | supported (legacy callbacks) |
 | 4.2    | supported (`core_external` namespace) |
 | ≤ 4.1  | best-effort (older external_api) |
 
-PHP 8.1+ recommended. Some skills note Moodle-version-specific differences.
+PHP support: 8.1+ for Moodle 4.x, 8.2+ for 5.0/5.1, 8.3+ for 5.2. PHP 8.4 tested on 5.1+. Some skills note Moodle-version-specific differences.
 
 ---
 
