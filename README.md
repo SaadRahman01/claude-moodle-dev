@@ -111,6 +111,16 @@ No API keys. Sitemap + disk cache + conditional GET. Pairs cleanly with this plu
 
 ### Install (Claude Code)
 
+Auto-wired when installing this plugin via marketplace. Requires [`uv`](https://docs.astral.sh/uv/) on PATH:
+
+```
+brew install uv      # or: pip install uv
+```
+
+The plugin's `mcpServers` entry runs `uvx --from git+https://github.com/SaadRahman01/moodle-mcp moodle-mcp` on demand — no manual `pipx install` needed.
+
+Manual install (any client):
+
 ```
 pipx install moodle-mcp
 claude mcp add moodle moodle-mcp
