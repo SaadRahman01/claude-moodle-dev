@@ -16,7 +16,7 @@ Thanks for helping make this the best Moodle toolkit for Claude Code.
 .claude-plugin/         # plugin + marketplace manifests
 skills/<name>/SKILL.md  # auto-activating expertise
 commands/<name>.md      # /<name> slash commands
-agents/<name>.md        # invokable subagents
+agents/<name>.md        # invocable subagents
 ```
 
 ## Add a skill
