@@ -64,7 +64,7 @@ jobs:
           mkdir -p dist
           git archive --format=tar.gz --prefix="moodle-dev-${tag#v}/" -o "dist/moodle-dev-${tag#v}.tar.gz" "$tag"
           git archive --format=zip --prefix="moodle-dev-${tag#v}/" -o "dist/moodle-dev-${tag#v}.zip" "$tag"
-          (cd dist && sha256sum * > SHA256SUMS)
+          (cd dist && sha256sum -- *.tar.gz *.zip > SHA256SUMS)
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
