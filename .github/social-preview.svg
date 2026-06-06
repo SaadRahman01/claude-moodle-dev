@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1419"/>
+      <stop offset="50%" stop-color="#1a1f2e"/>
+      <stop offset="100%" stop-color="#0f1419"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff8c42"/>
+      <stop offset="100%" stop-color="#f98012"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8a2be2"/>
+      <stop offset="100%" stop-color="#b76eff"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/>
+    </pattern>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+
+  <!-- Glow blob -->
+  <circle cx="1080" cy="320" r="280" fill="#f98012" opacity="0.12" filter="url(#glow)"/>
+  <circle cx="1080" cy="320" r="160" fill="#f98012" opacity="0.18" filter="url(#glow)"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1280" height="4" fill="url(#orange)"/>
+
+  <!-- Tag chip -->
+  <g transform="translate(80, 90)">
+    <rect width="280" height="38" rx="19" fill="url(#violet)" opacity="0.15"/>
+    <rect width="280" height="38" rx="19" fill="none" stroke="#b76eff" stroke-width="1" opacity="0.5"/>
+    <text x="140" y="25" font-family="ui-monospace, Menlo, monospace" font-size="15" font-weight="600" fill="#d4b3ff" text-anchor="middle">CLAUDE CODE PLUGIN · MIT</text>
+  </g>
+
+  <!-- Title -->
+  <text x="80" y="220" font-family="-apple-system, system-ui, sans-serif" font-size="96" font-weight="800" fill="#ffffff" letter-spacing="-3">
+    moodle-dev
+  </text>
+
+  <!-- Subtitle -->
+  <text x="80" y="278" font-family="-apple-system, system-ui, sans-serif" font-size="30" font-weight="400" fill="#9ca3af">
+    Moodle plugin toolkit for AI coding assistants
+  </text>
+
+  <!-- Stat chips -->
+  <g font-family="-apple-system, system-ui, sans-serif" font-weight="700">
+    <g transform="translate(80, 330)">
+      <rect width="190" height="80" rx="12" fill="url(#orange)"/>
+      <text x="95" y="42" font-size="40" fill="#ffffff" text-anchor="middle">13</text>
+      <text x="95" y="68" font-size="14" fill="#ffffff" text-anchor="middle" opacity="0.9" font-weight="500" letter-spacing="2">SKILLS</text>
+    </g>
+    <g transform="translate(290, 330)">
+      <rect width="190" height="80" rx="12" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="95" y="42" font-size="40" fill="#ffffff" text-anchor="middle">8</text>
+      <text x="95" y="68" font-size="14" fill="#9ca3af" text-anchor="middle" font-weight="500" letter-spacing="2">COMMANDS</text>
+    </g>
+    <g transform="translate(500, 330)">
+      <rect width="190" height="80" rx="12" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="95" y="42" font-size="40" fill="#ffffff" text-anchor="middle">2</text>
+      <text x="95" y="68" font-size="14" fill="#9ca3af" text-anchor="middle" font-weight="500" letter-spacing="2">AGENTS</text>
+    </g>
+  </g>
+
+  <!-- Coverage row -->
+  <text x="80" y="465" font-family="ui-monospace, Menlo, monospace" font-size="18" fill="#6b7280" font-weight="500">
+    XMLDB · Hooks API · PHPUnit · Behat · AMD · Privacy · Security · A11y · Themes · Mobile
+  </text>
+
+  <!-- Adapter row label -->
+  <text x="80" y="525" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#6b7280" font-weight="600" letter-spacing="2">
+    ALSO WORKS WITH
+  </text>
+
+  <!-- Adapter pills -->
+  <g font-family="-apple-system, system-ui, sans-serif" font-size="16" font-weight="600">
+    <g transform="translate(80, 540)">
+      <rect width="90" height="34" rx="6" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="45" y="22" fill="#e5e7eb" text-anchor="middle">Cursor</text>
+    </g>
+    <g transform="translate(180, 540)">
+      <rect width="100" height="34" rx="6" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="50" y="22" fill="#e5e7eb" text-anchor="middle">Copilot</text>
+    </g>
+    <g transform="translate(290, 540)">
+      <rect width="80" height="34" rx="6" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="40" y="22" fill="#e5e7eb" text-anchor="middle">Aider</text>
+    </g>
+    <g transform="translate(380, 540)">
+      <rect width="100" height="34" rx="6" fill="#1f2937" stroke="#374151" stroke-width="1"/>
+      <text x="50" y="22" fill="#e5e7eb" text-anchor="middle">Continue</text>
+    </g>
+  </g>
+
+  <!-- Repo url -->
+  <text x="80" y="610" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#4b5563">
+    github.com/SaadRahman01/claude-moodle-dev
+  </text>
+
+  <!-- Big Moodle M -->
+  <g transform="translate(950, 240)" filter="url(#glow)">
+    <text x="0" y="0" font-family="-apple-system, system-ui, sans-serif" font-size="280" font-weight="900" fill="url(#orange)" opacity="0.95">M</text>
+  </g>
+
+  <!-- Code bracket ornament -->
+  <g transform="translate(880, 540)" font-family="ui-monospace, Menlo, monospace" font-size="22" font-weight="700" fill="#f98012" opacity="0.7">
+    <text x="0" y="0">&lt;/&gt;</text>
+    <text x="60" y="0" fill="#9ca3af">moodle</text>
+  </g>
+</svg>

@@ -102,12 +102,29 @@ Bump in three places: `plugin.json`, `marketplace.json` (`plugins[].version`), `
 
 ## Testing locally
 
+Structural checks (fast, run before commit):
+
+```
+tests/run.sh
+python3 -m unittest tests.test_build_adapters
+```
+
+End-to-end check with Claude Code:
+
 ```
 /plugin marketplace add /absolute/path/to/claude-moodle-dev
 /plugin install moodle-dev@moodle-dev
 ```
 
 Then prompt Claude with a Moodle task and confirm the right skill activates (`/skills` to list active skills).
+
+## Adding a new adapter
+
+See [docs/ADAPTER_AUTHORING.md](docs/ADAPTER_AUTHORING.md) for how to support a new AI assistant.
+
+## Security
+
+Vulnerabilities? See [SECURITY.md](SECURITY.md) — do **not** open a public issue.
 
 ## Questions
 

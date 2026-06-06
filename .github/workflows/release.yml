@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.4.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify version matches tag
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          ver="${tag#v}"
+          plugin_v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          mp_v=$(python3 -c "import json; print(json.load(open('.claude-plugin/marketplace.json'))['plugins'][0]['version'])")
+          if [ "$plugin_v" != "$ver" ] || [ "$mp_v" != "$ver" ]; then
+            echo "::error::tag $tag does not match plugin.json=$plugin_v marketplace.json=$mp_v"
+            exit 1
+          fi
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          ver="${tag#v}"
+          awk -v ver="$ver" '
+            /^## \[/ {
+              if (capture) exit
+              if ($0 ~ "\\[" ver "\\]") { capture = 1; next }
+            }
+            capture { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No changelog entry for $ver — falling back to tag message." >&2
+            git tag -l --format='%(contents)' "$tag" > RELEASE_NOTES.md
+          fi
+
+      - name: Build source bundle
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          mkdir -p dist
+          git archive --format=tar.gz --prefix="moodle-dev-${tag#v}/" -o "dist/moodle-dev-${tag#v}.tar.gz" "$tag"
+          git archive --format=zip --prefix="moodle-dev-${tag#v}/" -o "dist/moodle-dev-${tag#v}.zip" "$tag"
+          (cd dist && sha256sum * > SHA256SUMS)
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.tag, '-') }}

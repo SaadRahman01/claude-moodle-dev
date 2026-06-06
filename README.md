@@ -48,6 +48,14 @@ This plugin teaches Claude all of it. Auto-activates when Claude detects Moodle 
 Local dev: `/plugin marketplace add /absolute/path/to/claude-moodle-dev`.
 Verify: `/plugin list`.
 
+### One-liner installer (any non-Claude assistant)
+
+```
+./install.sh <cursor|copilot|aider|continue|generic> [--dest <path>]
+```
+
+Defaults to current directory. Or copy manually as below.
+
 ### Cursor
 
 Copy `adapters/cursor/.cursor/` into your project (or `~/.cursor/` for global use). Each skill becomes an on-demand rule; agents and commands surface via `@<name>` mentions in chat.
@@ -188,8 +196,15 @@ adapters/               # generated per-assistant — DO NOT hand-edit
   generic/PROMPTS.md    # paste-anywhere single-file bundle
 
 scripts/build-adapters.py   # regenerates adapters/ from canonical files
+install.sh                  # one-liner adapter installer for non-Claude assistants
+tests/run.sh                # structural test harness (run before commit)
+docs/ADAPTER_AUTHORING.md   # how to add a new assistant
 .githooks/pre-commit        # phpcs + PHPUnit + version.php monotonicity (install: git config core.hooksPath .githooks)
-.github/workflows/lint.yml  # CI: JSON, frontmatter, adapter sync, broken links
+.github/workflows/lint.yml     # CI: JSON, frontmatter, adapter sync, links, spellcheck, actionlint
+.github/workflows/release.yml  # tag-driven release: bundle + changelog extraction + GH release
+.github/CODEOWNERS          # auto-review routing
+.github/dependabot.yml      # weekly GitHub Actions updates
+SECURITY.md                 # vulnerability disclosure policy
 ```
 
 ### Editing workflow

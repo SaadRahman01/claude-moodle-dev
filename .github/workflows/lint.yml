@@ -83,7 +83,6 @@ jobs:
       - name: No broken intra-repo links
         run: |
           fail=0
-          # Find markdown links like (path/file.md) and check files exist when path is relative & non-URL
           while IFS= read -r line; do
             file=$(echo "$line" | cut -d: -f1)
             target=$(echo "$line" | sed -E 's/.*\(([^)]+)\).*/\1/' | sed 's/#.*//')
@@ -93,7 +92,57 @@ jobs:
             dir=$(dirname "$file")
             full="$dir/$target"
             if [ ! -e "$full" ] && [ ! -e "$target" ]; then
-              echo "::warning file=$file::link target not found: $target"
+              echo "::error file=$file::link target not found: $target"
+              fail=1
             fi
           done < <(grep -rEn '\]\([^)]+\.md[^)]*\)' --include='*.md' . || true)
           exit $fail
+
+      - name: Skill line-count budget (<= 400)
+        run: |
+          fail=0
+          for f in skills/*/SKILL.md; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 400 ]; then
+              echo "::error file=$f::skill is $lines lines (budget: 400). Split into multiple skills."
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Run repo test harness
+        run: |
+          if [ -x tests/run.sh ]; then
+            tests/run.sh
+          else
+            echo "tests/run.sh missing or not executable — skipping"
+          fi
+
+  spellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: codespell-project/actions-codespell@v2
+        with:
+          check_filenames: true
+          skip: ./.git,./adapters,./node_modules,*.lock,CHANGELOG.md
+          ignore_words_file: .codespellignore
+
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run actionlint
+        run: |
+          bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+  linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lychee external link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --max-concurrency 4 --exclude-mail --accept 200,206,429 './**/*.md'
+          fail: false
