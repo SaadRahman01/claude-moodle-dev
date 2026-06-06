@@ -5,11 +5,21 @@ All notable changes to `moodle-dev` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-06-06
 
 ### Added
 
-- **Companion repo** [`moodle-mcp`](https://github.com/SaadRahman01/moodle-mcp) — Model Context Protocol server exposing live `moodledev.io` documentation search to Claude Desktop, Claude Code, Cursor, Continue, and any MCP client.
+- **Companion MCP server** [`moodle-mcp`](https://github.com/SaadRahman01/moodle-mcp) v0.2.0 — Model Context Protocol server exposing live `moodledev.io` documentation search to Claude Desktop, Claude Code, Cursor, Continue, Cline, Windsurf. Eight tools:
+  - `search_moodle_docs(query, limit, offset)` — BM25 scoring, synonym expansion (`cap`→`capability`, `ws`→`webservice`, `hook`↔`listener`), quoted-phrase boost, pagination
+  - `fetch_moodle_page(url)` — full body + headings for one page
+  - `get_hooks_api_listeners()` — core Hooks API index
+  - `get_capability_docs(component?)` — Access API + `RISK_*` reference
+  - `lookup_db_xmldb(query)` — XMLDB / schema / upgrade patterns
+  - `list_plugin_types()` — plugin types with docs URL
+  - `get_version_info()` — current Moodle versions
+  - `search_tracker(query, limit)` — tracker.moodle.org (Jira) search
+  - Plus MCP resources (`moodle://docs/apis/...`) and prompts (`moodle-plugin-skeleton`, `moodle-capability-review`, `moodle-hooks-migration`)
+- README: new "Companion MCP server" section + MCP badge.
 - `SECURITY.md` — vulnerability disclosure policy + scope.
 - `.github/CODEOWNERS` — review routing.
 - `.github/dependabot.yml` — weekly GitHub Actions updates.

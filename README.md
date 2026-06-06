@@ -88,6 +88,38 @@ Paste relevant sections from [`adapters/generic/PROMPTS.md`](adapters/generic/PR
 
 ---
 
+## Companion MCP server: live Moodle docs
+
+[`moodle-mcp`](https://github.com/SaadRahman01/moodle-mcp) is a separate Model Context Protocol server that gives any MCP-capable client (Claude Desktop / Code, Cursor, Continue, Cline, Windsurf) live access to the canonical Moodle developer documentation. The skills here teach conventions; the MCP server provides authoritative lookups.
+
+### What it adds
+
+| Tool | What it returns |
+|------|-----------------|
+| `search_moodle_docs(query, limit, offset)` | Top hits on `moodledev.io` with title, URL, headings, excerpt. Synonym expansion (`cap`→`capability`, `ws`→`webservice`, `hook`↔`listener`), quoted-phrase boost, BM25 scoring, pagination. |
+| `fetch_moodle_page(url)` | Full body + headings for one page — follow-up after a search. |
+| `get_hooks_api_listeners()` | Core Hooks API index + detected hook classes. |
+| `get_capability_docs(component?)` | Access API + `RISK_*` quick-reference; optional component scope. |
+| `lookup_db_xmldb(query)` | XMLDB / schema / `upgrade.php` patterns. |
+| `list_plugin_types()` | Every Moodle plugin type with one-line hint + docs URL. |
+| `get_version_info()` | Current Moodle versions parsed from `/general/releases`. |
+| `search_tracker(query, limit)` | Issue search against `tracker.moodle.org` (Jira). |
+
+Plus MCP **resources** (`moodle://docs/apis/...`) and **prompts** (`moodle-plugin-skeleton`, `moodle-capability-review`, `moodle-hooks-migration`).
+
+No API keys. Sitemap + disk cache + conditional GET. Pairs cleanly with this plugin.
+
+### Install (Claude Code)
+
+```
+pipx install moodle-mcp
+claude mcp add moodle moodle-mcp
+```
+
+Other clients: see [`moodle-mcp` README](https://github.com/SaadRahman01/moodle-mcp#wire-it-up-to-your-assistant).
+
+---
+
 ## What's inside
 
 ### Skills (auto-activate)
