@@ -5,6 +5,28 @@ All notable changes to `moodle-dev` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Companion repo** [`moodle-mcp`](https://github.com/SaadRahman01/moodle-mcp) — Model Context Protocol server exposing live `moodledev.io` documentation search to Claude Desktop, Claude Code, Cursor, Continue, and any MCP client.
+- `SECURITY.md` — vulnerability disclosure policy + scope.
+- `.github/CODEOWNERS` — review routing.
+- `.github/dependabot.yml` — weekly GitHub Actions updates.
+- `.github/workflows/release.yml` — tag-driven GitHub release with version sync check, changelog extraction, source bundle + SHA256SUMS.
+- `.github/social-preview.svg` — 1280×640 OG image template.
+- `tests/run.sh` — 85-check structural harness (frontmatter, activation contracts, manifests, generator drift, tabs).
+- `tests/test_build_adapters.py` — 6 unit tests for `parse()` and `load_all()`.
+- `install.sh` — one-liner adapter installer for non-Claude assistants (`./install.sh cursor`, etc.).
+- `docs/ADAPTER_AUTHORING.md` — guide for adding a new AI assistant adapter.
+- `.codespellignore` — repo-specific vocabulary.
+
+### Changed
+
+- Lint workflow: broken intra-repo links now error (was warning); 400-line skill budget enforced; runs `tests/run.sh`.
+- New CI jobs: `spellcheck` (codespell), `actionlint`, `linkcheck` (lychee).
+- README + CONTRIBUTING reflect new files and one-liner installer.
+
 ## [0.4.0] - 2026-05-28
 
 ### Added

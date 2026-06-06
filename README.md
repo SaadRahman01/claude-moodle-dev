@@ -11,9 +11,12 @@
 [![Aider](https://img.shields.io/badge/Aider-Conventions-orange.svg)](adapters/aider/)
 [![Continue](https://img.shields.io/badge/Continue-Rules-blueviolet.svg)](adapters/continue/)
 [![Moodle 4.x](https://img.shields.io/badge/Moodle-4.x%20%7C%205.x-orange.svg)](https://moodledev.io)
+[![MCP companion](https://img.shields.io/badge/MCP-moodle--mcp-8A2BE2.svg)](https://github.com/SaadRahman01/moodle-mcp)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Scaffolds plugins, writes XMLDB upgrades, audits privacy/security, generates PHPUnit + Behat tests, builds AMD modules, reviews PRs — all following official Moodle coding standards (PSR-4, frankenstyle, MOODLE_INTERNAL, GPL headers, `get_string`, `$DB`).
+
+> 🔌 **Companion MCP server:** [`moodle-mcp`](https://github.com/SaadRahman01/moodle-mcp) — live `moodledev.io` documentation search inside Claude Desktop / Code, Cursor, Continue, Cline. `pipx install moodle-mcp`.
 
 ---
 
